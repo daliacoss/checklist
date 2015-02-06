@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+<head>
+	<title>daily checklist</title>
+	<link rel="stylesheet" href="/static/main.css" type="text/css" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+	<div id="page_content">
+		<div class="task_column">
+			<h1>Today</h1>
+			{% for task in todayTasks%}
+			<p>
+				{{task.name}}{%if task.comment%}<br/>
+				<span class="task_comment">{{task.comment}}</span>{% endif %}
+			</p>
+			{% endfor %}
+		</div><span class="no_display">
+
+		</span><div class="task_column" id="right">
+			<h1>Later</h1>
+			{% for task in laterTasks%}
+			<p>
+				{{task.name}}{%if task.comment%}<br/>
+				{{task.comment}}{% endif %}
+			</p>
+			{% endfor %}
+		</div>
+	</span></div>
+</body>
+</html>
+
