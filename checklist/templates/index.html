@@ -5,27 +5,42 @@
 	<title>daily checklist</title>
 	<link rel="stylesheet" href="/static/main.css" type="text/css" />
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script language="Javascript" src="/static/jquery-1.11.2.min.js"></script>
+	<script language="Javascript" src="/static/checklist.js"></script>
 </head>
 <body>
 	<div id="page_content">
 		<div class="task_column">
 			<h1>Today</h1>
-			{% for task in todayTasks%}
-			<p>
-				{{task.name}}{%if task.comment%}<br/>
-				<span class="task_comment">{{task.comment}}</span>{% endif %}
-			</p>
-			{% endfor %}
-		</div><span class="no_display">
-
-		</span><div class="task_column" id="right">
+			<ul>{% for task in todayTasks recursive%}
+				<div data-depth="{{loop.depth0}}">
+					<span class="li_edit"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>#</span>
+					<div class="li_container"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>
+						<span class="li_marker"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>–</span>
+						<li>
+							<span class="task_name">{{task.name}}</span><br/>
+							<span class="task_comment">{%if task.comment%}{{task.comment}}{% endif %}</span>
+						</li>
+					</div>
+				</div>
+			{%if task.children %}{{loop(task.children)}}{% endif %}{% endfor %}</ul>
+		</div>
+		<div class="task_column" id="right">
 			<h1>Later</h1>
-			{% for task in laterTasks%}
-			<p>
-				{{task.name}}{%if task.comment%}<br/>
-				{{task.comment}}{% endif %}
-			</p>
-			{% endfor %}
+			<ul>{% for task in laterTasks recursive%}
+				<div data-depth="{{loop.depth0}}">
+					<span class="li_edit"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>#</span>
+					<div class="li_container"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>
+						<span class="li_marker"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>–</span>
+						<li>
+							<span class="task_name">{{task.name}}</span><br/>
+							<span class="task_comment">{%if task.comment%}{{task.comment}}{% endif %}</span>
+						</li>
+					</div>
+				</div>
+			{%if task.children %}{{loop(task.children)}}{% endif %}{% endfor %}</ul>
+
+			<div id="task_new_container"><input type="button" id="task_new_button" value="New Task" /></div>
 		</div>
 	</span></div>
 </body>

@@ -27,8 +27,10 @@
 	.task_column {
 		width: 50%;
 		min-height: 400px;
+		height: auto;
 		margin: 0;
 		padding: 0 1em;
+		position: relative;
 
 		display: inline-block;
 		vertical-align:top;
@@ -44,12 +46,92 @@
 		text-align: center;
 	}
 
-	#right {
+	.task_column li{
+		padding-left: 2em;
+
+		list-style-type: none;
+		/*cursor: pointer;*/
+	}
+
+	.li_container {
+		cursor: pointer;
+	}
+
+	#task_column_bottom{
+		bottom: 0;
+	}
+
+	.checked{
+		color: #33a000;
+	}
+
+	.li_marker{
 		position: absolute;
+		left: 2em;
+	}
+
+	.li_edit{
+		position: absolute;
+		left: 1em;
+		cursor: pointer;
+		/*font-size: .5em;*/
+	}
+
+	.li_edit:hover{
+		color: #a03000;
+	}
+
+	.task_column ul{
+		padding-left: 0em;
+	}
+
+	#right {
+		/*position: fixed;*/
+		float:right;
 	}
 
 	.task_comment {
 		font-size: .7em;
+	}
+
+	.task_name_editor {
+		width: 100%;
+		max-width: 100%;
+		height: 2.1em;
+		min-height: 1em;
+		max-height: 3em;
+
+		box-sizing: border-box;
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+	}
+
+	.task_comment_editor {
+		width: 100%;
+		max-width: 100%;
+		height: 6em;
+		max-height: 13em;
+
+		box-sizing: border-box;
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+	}
+
+	.task_editor_button {
+		font-size: .7em;
+		padding: .1em;
+	}
+
+	.subtask_editor {
+		padding-left: 2em;
+	}
+
+	#task_new_button {
+		font-size: 1.2em;
+	}
+
+	#task_new_container {
+		text-align: center;
 	}
 
 }
