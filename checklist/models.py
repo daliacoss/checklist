@@ -1,6 +1,7 @@
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import func
-from checklist import app, db
+from checklist import db
+import datetime
 
 class Task(db.Model):
 	__tablename__ = "tasks"
@@ -13,9 +14,10 @@ class Task(db.Model):
 	datetime_completed = db.Column(db.DateTime(timezone=True), nullable=True)
 	is_today = db.Column(db.Boolean, nullable=False)
 
-	def __init__(self, name, is_today, comment="", **kwargs):
+	def __init__(self, name, comment="", is_today=False, **kwargs):
 		self.name = name
 		self.is_today = is_today
+		self.comment = comment
 		for k,v in kwargs.items():
 			setattr(self, k, v)
 
@@ -23,7 +25,27 @@ class Task(db.Model):
 		self.hidden = False
 
 	def has_parent(self):
-		return self.parent_task_id != None and self.parent_task_id != self.id
+		return type(self.parent_task_id) == int and self.parent_task_id != self.id
+
+	def collectChildren(self):
+		self.children = Task.query.filter_by(parent_task_id=self.id).all()
+		return self.children
+
+	def deleteFromSession(self, deleteDescendants=False):
+		"""delete this model from db.session (without committing)"""
+
+		if deleteDescendants:
+			for child in self.collectChildren():
+				child.deleteFromSession(True)
+
+		db.session.delete(self)
+
+	def markComplete(self, markDescendants=False):
+
+		self.datetime_completed = datetime.datetime.utcnow()
+		if markDescendants:
+			for child in self.collectChildren():
+				child.markComplete(True)
 
 class Milestone(db.Model):
 	__tablename__ = "milestones"

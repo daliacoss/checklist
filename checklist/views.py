@@ -1,4 +1,4 @@
-from checklist import app, db, models
+from checklist import app, db, models, resources
 from flask import request, render_template, url_for
 from datetime import datetime
 
@@ -10,10 +10,10 @@ def pop(l, *indices):
 		l.pop(index-popped)
 		popped += 1
 
-@app.route("/update", methods=["POST"])
-def update():
-	print request.form
-	return "hi\n"
+# @app.route("/update", methods=["POST", "PUT"])
+# def update():
+# 	print request.form
+# 	return "hi\n"
 
 @app.route("/")
 def index():
@@ -26,7 +26,7 @@ def index():
 	for i, task in enumerate(tasks):
 		if task.datetime_completed:
 			#if task was completed a while ago, don't show it
-			delta = (datetime.now() - task.datetime_completed).total_seconds()
+			delta = (datetime.utcnow() - task.datetime_completed).total_seconds()
 			if delta / 3600. >= HOURS_UNTIL_HIDDEN:
 				toPop = toPop.union(set([i]))
 				task.hidden = True
@@ -55,6 +55,8 @@ def index():
 			toPop = toPop.union(set([i]))
 
 	pop(tasks, *toPop)
+	# print toPop
+	# print todayTasks
 	# print tasks
 
 	return render_template('index.html', todayTasks=todayTasks, laterTasks=tasks)

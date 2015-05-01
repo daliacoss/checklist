@@ -134,4 +134,9 @@
 		text-align: center;
 	}
 
+	.task_server_status {
+		line-height: 2em;
+		font-size: .8em;
+	}
+
 }

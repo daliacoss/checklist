@@ -10,12 +10,12 @@
 </head>
 <body>
 	<div id="page_content">
-		<div class="task_column">
+		<div class="task_column" id="left">
 			<h1>Today</h1>
 			<ul>{% for task in todayTasks recursive%}
-				<div data-depth="{{loop.depth0}}">
+				<div data-depth="{{loop.depth0}}" data-task_id={{task.id}}>
 					<span class="li_edit"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>#</span>
-					<div class="li_container"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>
+					<div class="li_container{%if task.datetime_completed%} checked{%endif%}"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>
 						<span class="li_marker"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>–</span>
 						<li>
 							<span class="task_name">{{task.name}}</span><br/>
@@ -24,13 +24,14 @@
 					</div>
 				</div>
 			{%if task.children %}{{loop(task.children)}}{% endif %}{% endfor %}</ul>
+			<span class="task_server_status"></span>
 		</div>
 		<div class="task_column" id="right">
 			<h1>Later</h1>
 			<ul>{% for task in laterTasks recursive%}
-				<div data-depth="{{loop.depth0}}">
+				<div data-depth="{{loop.depth0}}" data-task_id={{task.id}}>
 					<span class="li_edit"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>#</span>
-					<div class="li_container"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>
+					<div class="li_container{%if task.datetime_completed%} checked{%endif%}"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>
 						<span class="li_marker"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>–</span>
 						<li>
 							<span class="task_name">{{task.name}}</span><br/>
@@ -41,6 +42,7 @@
 			{%if task.children %}{{loop(task.children)}}{% endif %}{% endfor %}</ul>
 
 			<div id="task_new_container"><input type="button" id="task_new_button" value="New Task" /></div>
+			<span class="task_server_status"></span>
 		</div>
 	</span></div>
 </body>

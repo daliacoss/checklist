@@ -61,11 +61,12 @@ function setLiContainerEvents(liContainer){
 	liContainer.click(function() {
 
 		//if editor is open or any buttons exist
+		var id = $(this).parent().data("task_id");
+		var isToday = ! $(this).closest(".task_column").is("#right");
 		var editButton = $(this).parent().children(".li_edit");
 		if (editButton.data("open") || editButton.data("subtaskOpen") || $(this).find("input").length){
 			return;
 		}
-
 
 		var el = $(this).find(".li_marker");
 		var checked = $(this).hasClass("checked")
@@ -73,6 +74,8 @@ function setLiContainerEvents(liContainer){
 		if (checked){
 			$(this).removeClass("checked");
 			el.text("–");
+
+			toggleTaskCompleteInDB(id, false, isToday);
 		}
 		else{
 			$(this).addClass("checked");
@@ -86,8 +89,9 @@ function setLiContainerEvents(liContainer){
 					c.addClass("checked");
 				}
 			});
-		}
 
+			toggleTaskCompleteInDB(id, true, isToday);
+		}
 	});
 }
 
@@ -110,6 +114,7 @@ function openEditor(editButton){
 
 	var container = editButton.parent();
 	var li = container.find("li");
+	var isToday = ! container.closest(".task_column").is("#right");
 
 	// getTaskDescendants(container);
 
@@ -149,6 +154,9 @@ function openEditor(editButton){
 
 		editButton.data("taskName", taskName);
 		editButton.data("taskComment", taskComment);
+
+		// console.log(taskName);
+		editTaskInDB(container.data("task_id"), taskName, taskComment, isToday);
 
 		closeEditor(editButton);
 	});
@@ -316,6 +324,10 @@ function addTask(listElement, taskName, taskComment, parent){
 	var newItem = createTask(taskName, taskComment);
 	var newItemEditButton = newItem.find(".li_edit");
 
+	//right column is "later"; left column is "today"
+	var isToday = (listElement.closest(".task_column")[0].id == "right") ? false : true;
+	addTaskToDB(taskName, taskComment, isToday, (parent) ? parent.data("task_id"): null, newItem);
+
 	newItemEditButton.data("open", false);
 	if (parent){
 		newItem.data("depth", parseInt(parent.data("depth")) + 1);
@@ -343,20 +355,130 @@ function deleteTask(task){
 		// console.log(i, subtask);
 		subtask.remove();
 	});
+	var id = task.data("task_id");
+	var isToday = ! task.closest("task_column").is("#right");
 	task.remove();
+	deleteTaskFromDB(id, isToday);
 }
 
 function moveTask(task){
 
 	var destination = $("ul", task.parent().parent().siblings());
+	var isToday = ! task.parent().parent().siblings().is("#right")
 	var descendants = getTaskDescendants(task);
 
 	destination.append(task.detach());
 	closeEditor($(".li_edit", task));
 
 	$.each(descendants, function(i, subtask){
-		console.log(i, subtask);
+		// console.log(i, subtask);
 		destination.append(subtask.detach());
 	})
 	// console.log(destination);
+
+	editTaskInDB(task.data("task_id"), null, null, isToday);
 }
+
+function displayStatusMessage(message, isToday, timeout){
+
+	var serverStatusSpan;
+	if (isToday){
+		serverStatusSpan = $("#left .task_server_status");
+	}
+	else {
+		serverStatusSpan = $("#right .task_server_status")
+	}
+
+	// console.log(serverStatusSpan.text());
+	serverStatusSpan.text(message);
+
+	if (timeout != null){
+		window.setTimeout(function() {
+			serverStatusSpan.text("");
+		}, timeout);
+	}
+}
+
+function addTaskToDB(taskName, taskComment, isToday, parent, taskElement){
+
+	displayStatusMessage("saving...", isToday);
+	$.ajax({
+		url: "/task",
+		type: "PUT",
+		data: {name: taskName, comment: taskComment, parent: parent, is_today: isToday},
+		dataType: "json",
+		success: function (result) {
+			if (result["msg"] == "success"){
+				taskElement.data("task_id", result["data"]["task"]["id"]);
+				displayStatusMessage("saved", isToday, 1000);
+				// console.log($("#left .task_server_status"))
+			}
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			displayStatusMessage(errorThrown, isToday, 1000);
+		}
+	});
+}
+
+function deleteTaskFromDB(taskID, isToday){
+
+	displayStatusMessage("saving...", isToday);
+	$.ajax({
+		url: "/task",
+		type: "DELETE",
+		data: {id: taskID},
+		dataType: "json",
+		success: function (result) {
+			if (result["msg"] == "success"){
+				displayStatusMessage("saved", isToday, 1000);
+			}
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			displayStatusMessage(errorThrown, isToday, 1000);
+		}
+	});
+}
+
+function editTaskInDB(taskID, taskName, taskComment, isToday, parent){
+	
+	var data = {id: taskID}
+	if (taskName != null) data["name"] = taskName;
+	if (taskComment != null) data["comment"] = taskComment;
+	if (isToday != null) data["is_today"] = isToday;
+	// console.log(taskName, parent);
+	if (parent != null) data["parent"] = parent;
+
+	displayStatusMessage("saving...", isToday);
+	$.ajax({
+		url: "/task",
+		type: "POST",
+		data: data,
+		dataType: "json",
+		success: function (result) {
+			if (result["msg"] == "success"){
+				displayStatusMessage("saved", isToday, 1000);
+			}
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			displayStatusMessage(errorThrown, isToday, 1000);
+		}
+	});
+}
+
+function toggleTaskCompleteInDB(taskID, complete, isToday){
+	$.ajax({
+		url: "/task",
+		type: "POST",
+		data: {id: taskID, checked: complete},
+		dataType: "json",
+		success: function (result) {
+			if (result["msg"] == "success"){
+				displayStatusMessage("saved", isToday, 1000);
+			}
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			displayStatusMessage(errorThrown, isToday, 1000);
+		}
+	});
+}
+
