@@ -15,6 +15,8 @@
 			<ul>{% for task in todayTasks recursive%}
 				<div data-depth="{{loop.depth0}}" data-task_id={{task.id}}>
 					<span class="li_edit"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>#</span>
+					<span class="li_move"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}><span>▲</span></span>
+					<span class="li_move down"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}><span>▼</span></span>
 					<div class="li_container{%if task.datetime_completed%} checked{%endif%}"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>
 						<span class="li_marker"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>–</span>
 						<li>
@@ -31,6 +33,8 @@
 			<ul>{% for task in laterTasks recursive%}
 				<div data-depth="{{loop.depth0}}" data-task_id={{task.id}}>
 					<span class="li_edit"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>#</span>
+					<span class="li_move"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}><span>▲</span></span>
+					<span class="li_move down"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}><span>▼</span></span>
 					<div class="li_container{%if task.datetime_completed%} checked{%endif%}"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>
 						<span class="li_marker"{%if loop.depth0%} style="margin-left: {{loop.depth0 * 1}}em;"{%endif%}>–</span>
 						<li>

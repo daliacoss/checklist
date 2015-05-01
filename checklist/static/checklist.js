@@ -6,11 +6,13 @@ $(document).ready(function(){
 
 	var editButton = $(".task_column .li_edit");
 	var newTaskButton = $("#task_new_button");
+	var moveButton = $(".task_column .li_move");
 
 	var liContainer = $(".li_container");
 
 	setLiContainerEvents(liContainer);
 	setEditButtonEvents(editButton);
+	setMoveButtonEvents(moveButton);
 
 	newTaskButton.click(function(){
 		if (! $(this).data("open")){
@@ -108,6 +110,80 @@ function setEditButtonEvents(editButton){
 			closeEditor($(this));
 		}
 	});
+}
+
+function setMoveButtonEvents(moveButton){
+	moveButton.click(function () {
+		var up = ! $(this).hasClass("down");
+		var task = $(this).parent();
+		moveTaskWithinColumn(task, up);
+	})
+}
+
+function moveTaskWithinColumn(task, up){
+
+	var descendants = getTaskDescendants(task);
+	var siblingFunction, insertFunction;
+
+	if (up){
+		siblingFunction = "prev";
+		insertFunction = "before";
+	}
+	else {
+		siblingFunction = "next";
+		insertFunction = "after";
+	}
+
+	var sibling = task[siblingFunction]();
+	while (sibling.data("depth") != undefined && sibling.data("depth") != task.data("depth")){
+		sibling = sibling[siblingFunction]();
+	}
+
+	if (sibling.length){
+		task.detach();
+		$.each(descendants, function(i, d){
+			d.detach();
+		})
+
+		//if moving down, insert task after last sibling descendant
+		var siblingDescendants = getTaskDescendants(sibling);
+		if (insertFunction == "after" && siblingDescendants.length){
+			siblingDescendants[siblingDescendants.length-1][insertFunction](task);
+		}
+		else {
+			sibling[insertFunction](task);
+		}
+
+		$.each(descendants, function(i, d){
+			if (insertFunction == "before"){
+				sibling[insertFunction](d);
+			}
+			// else if (siblingDescendants.length){
+			// 	siblingDescendants[siblingDescendants.length-1][insertFunction](d);
+			// }
+			else {
+				task[insertFunction](d);
+			}
+		})
+	}
+	// }
+	// else {
+	// 	var next = task.next();
+	// 	while (next.data("depth") != undefined && next.data("depth") != task.data("depth")){
+	// 		next = next.next();
+	// 	}
+	// 	console.log(next.length);
+	// 	// if (next.length){
+	// 	// 	task.detach();
+	// 	// 	$.each(descendants, function(i, d){
+	// 	// 		d.detach();
+	// 	// 	})
+	// 	// 	next.after(task);
+	// 	// 	$.each(descendants, function(i, d){
+	// 	// 		next.after(d);
+	// 	// 	})
+	// 	// }
+	// }
 }
 
 function openEditor(editButton){
@@ -237,7 +313,7 @@ function openTaskCreator(newTaskButton, taskParent){
 			.append($("<textarea/>", {"class":"task_comment_editor"})));
 	if (taskParent){
 		// $("textarea", container).css("width: 0%");
-		$("div", container).css("margin-left", "3em");
+		$("div", container).css("margin-left", "5em");
 		// $("textarea", container).css("width: 100%");
 	}
 
@@ -306,6 +382,8 @@ function getTaskDescendants(task){
 function createTask(taskName, taskComment){
 	var taskPrototype = $("<div/>")
 		.append($("<span/>", {"class":"li_edit"}).text("#"))
+		.append($("<span/>", {"class":"li_move"}).html("<span>▲</span>"))
+		.append($("<span/>", {"class":"li_move down"}).html("<span>▼</span>"))
 		.append($("<div/>", {"class":"li_container"})
 			.append($("<span/>", {"class":"li_marker"}).text("–"))
 			.append($("<li/>")
@@ -315,6 +393,7 @@ function createTask(taskName, taskComment){
 
 	setLiContainerEvents(taskPrototype.children("div"));
 	setEditButtonEvents(taskPrototype.children(".li_edit"));
+	setMoveButtonEvents(taskPrototype.children(".li_move"))
 
 	return taskPrototype;
 }
@@ -338,7 +417,7 @@ function addTask(listElement, taskName, taskComment, parent){
 
 	if (parent){
 		var indent = parseInt(parent.find(".li_container").get(0).style.marginLeft || 0) + 1;
-		$.each([".li_container", ".li_edit", ".li_marker"], function(index, selector){
+		$.each([".li_container", ".li_edit", ".li_marker", ".li_move"], function(index, selector){
 			// $(".li_container", newItem).css("margin-left", indent.toString() + "em");
 			$(selector, newItem).css("margin-left", indent.toString() + "em");
 		});

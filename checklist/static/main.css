@@ -47,7 +47,7 @@
 	}
 
 	.task_column li{
-		padding-left: 2em;
+		padding-left: 4em;
 
 		list-style-type: none;
 		/*cursor: pointer;*/
@@ -67,7 +67,7 @@
 
 	.li_marker{
 		position: absolute;
-		left: 2em;
+		left: 4em;
 	}
 
 	.li_edit{
@@ -81,6 +81,24 @@
 		color: #a03000;
 	}
 
+	.li_move{
+		position: absolute;
+		left: 2em;
+		cursor: pointer;
+	}
+
+	.li_move:hover{
+		color: #a03000;
+	}
+
+	.li_move.down{
+		left: 3em;
+	}
+
+	.li_move span{
+		font-size: .8em;
+	}
+
 	.task_column ul{
 		padding-left: 0em;
 	}
@@ -92,6 +110,10 @@
 
 	.task_comment {
 		font-size: .7em;
+	}
+
+	.task_creator {
+		margin-left: 1em;
 	}
 
 	.task_name_editor {
