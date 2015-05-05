@@ -19,6 +19,10 @@ class TaskResource(Resource):
 		db.session.add(task)
 		db.session.commit()
 
+		view = task.createView()
+		db.session.add(view)
+		db.session.commit()
+
 		return {"msg": "success", "data": {"task": {"id":task.id}}}
 
 	def post(self):
@@ -47,6 +51,13 @@ class TaskResource(Resource):
 		elif request.form.get("checked") == "false" and task.datetime_completed:
 			task.datetime_completed = None
 
+		if request.form.get("view_index_delta"):
+			try:
+				viewIdDelta = int(request.form.get("view_index_delta"))
+				task.updateView(viewIdDelta)
+			except ValueError:
+				return {"msg": "failed - view_id_delta must be integer"}, 400
+
 		db.session.commit()
 
 		return {"msg": "success"}
@@ -56,11 +67,11 @@ class TaskResource(Resource):
 		try:
 			taskID = int(request.form.get("id"))
 		except:
-			return {"msg": "failed - 'id' field must be int"}, 400
+			return {"msg": "failed - 'id' field must be integer"}, 400
 
 		task = models.Task.query.filter_by(id=taskID).one()
 		try:
-			task.deleteFromSession(deleteDescendants=True)
+			task.deleteFromSession(deleteDescendants=True, deleteView=True)
 			db.session.commit()
 			return {"msg": "success"}
 		except:

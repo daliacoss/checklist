@@ -13,6 +13,7 @@ class Task(db.Model):
 	datetime_added = db.Column(db.DateTime(timezone=True))
 	datetime_completed = db.Column(db.DateTime(timezone=True), nullable=True)
 	is_today = db.Column(db.Boolean, nullable=False)
+	view_id = db.Column(db.Integer)
 
 	def __init__(self, name, comment="", is_today=False, **kwargs):
 		self.name = name
@@ -31,13 +32,15 @@ class Task(db.Model):
 		self.children = Task.query.filter_by(parent_task_id=self.id).all()
 		return self.children
 
-	def deleteFromSession(self, deleteDescendants=False):
+	def deleteFromSession(self, deleteDescendants=False, deleteView=True):
 		"""delete this model from db.session (without committing)"""
 
 		if deleteDescendants:
 			for child in self.collectChildren():
 				child.deleteFromSession(True)
 
+		if deleteView:
+			db.session.delete(TaskView.query.filter_by(task_id=self.id).one())
 		db.session.delete(self)
 
 	def markComplete(self, markDescendants=False):
@@ -46,6 +49,79 @@ class Task(db.Model):
 		if markDescendants:
 			for child in self.collectChildren():
 				child.markComplete(True)
+
+	def createView(self):
+
+		parentID = None
+		column = not self.is_today
+		if self.parent_task_id:
+			tmp = db.session.query(TaskView).filter_by(task_id=self.parent_task_id).one()
+			parentID = tmp.id
+			column = tmp.task_column
+
+		#find the highest view_index of any view with the same parent, and add 1 (parent can be None)
+		viewIndex = db.session.query(func.max(TaskView.view_index))\
+			.filter_by(parent_view_id=parentID, task_column=column)\
+			.one()[0] or -1
+		viewIndex += 1
+
+		print column
+		view = TaskView(self.id, viewIndex, parentID, column)
+
+		return view
+
+	def updateView(self, delta):
+
+		view = TaskView.query.filter_by(task_id=self.id).one()
+		view.setViewIndex(view.view_index+delta)
+		# if not self.view_id:
+		# 	self.view_id = delta
+		# else:
+		# 	self.view_id += delta
+
+		# siblingsAndSelf = Task.query.filter_by(is_today=self.is_today).order_by(Task.view_id).all()
+		# print [x.view_id for x in siblingsAndSelf]
+		# for task in siblingsAndSelf:
+		# 	print task == self
+
+class TaskView(db.Model):
+	__tablename__ = "task_views"
+
+	id = db.Column(db.Integer, primary_key=True)
+	task_id = db.Column(db.Integer, db.ForeignKey("tasks.id"))
+	view_index = db.Column(db.Integer, nullable=False)
+	parent_view_id = db.Column(db.Integer)
+	task_column = db.Column(db.Integer)
+
+	def __init__(self, task_id, view_index=0, parent_view_id=None, task_column=0):
+		self.task_id = task_id
+		self.view_index = view_index
+		self.parent_view_id = parent_view_id
+		self.task_column = task_column
+
+	def setViewIndex(self, newIndex):
+		endpoints = sorted((self.view_index, newIndex))
+		viewsToShift = TaskView.query\
+			.filter_by(parent_view_id=self.parent_view_id, task_column=self.task_column)\
+			.filter(TaskView.view_index>=endpoints[0])\
+			.filter(TaskView.view_index<=endpoints[1])\
+			.order_by(TaskView.view_index).all()
+
+		#if view_index is increasing, decrease the indices of the views it jumps in front of
+		#else, increase the indices of the views it jumps behind
+		direction = cmp(self.view_index, newIndex)
+		for view in viewsToShift:
+			view.view_index += direction
+
+		self.view_index = newIndex
+
+	def deleteFromSession():
+
+		viewsToShift = TaskView.query\
+			.filter_by(parent_view_id=self.parent_view_id, task_column=self.task_column)\
+			.filter(TaskView.view_index>self.view_index).all()
+		for view in viewsToShift:
+			view.view_index += 1
 
 class Milestone(db.Model):
 	__tablename__ = "milestones"

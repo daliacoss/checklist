@@ -518,6 +518,24 @@ function deleteTaskFromDB(taskID, isToday){
 	});
 }
 
+function updateTaskViewInDB(taskID, delta){
+	displayStatusMessage("saving...", isToday);
+	$.ajax({
+		url: "/task",
+		type: "POST",
+		data: {id: taskID, view_id_delta: delta},
+		dataType: "json",
+		success: function (result) {
+			if (result["msg"] == "success"){
+				displayStatusMessage("saved", isToday, 1000);
+			}
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			displayStatusMessage(errorThrown, isToday, 1000);
+		}
+	});
+}
+
 function editTaskInDB(taskID, taskName, taskComment, isToday, parent){
 	
 	var data = {id: taskID}
