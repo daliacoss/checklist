@@ -53,6 +53,7 @@ class TaskResource(Resource):
 
 		if request.form.get("view_index_delta"):
 			try:
+				print "reordering"
 				viewIdDelta = int(request.form.get("view_index_delta"))
 				task.updateView(viewIdDelta)
 			except ValueError:

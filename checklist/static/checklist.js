@@ -139,33 +139,37 @@ function moveTaskWithinColumn(task, up){
 		sibling = sibling[siblingFunction]();
 	}
 
-	if (sibling.length){
-		task.detach();
-		$.each(descendants, function(i, d){
-			d.detach();
-		})
-
-		//if moving down, insert task after last sibling descendant
-		var siblingDescendants = getTaskDescendants(sibling);
-		if (insertFunction == "after" && siblingDescendants.length){
-			siblingDescendants[siblingDescendants.length-1][insertFunction](task);
-		}
-		else {
-			sibling[insertFunction](task);
-		}
-
-		$.each(descendants, function(i, d){
-			if (insertFunction == "before"){
-				sibling[insertFunction](d);
-			}
-			// else if (siblingDescendants.length){
-			// 	siblingDescendants[siblingDescendants.length-1][insertFunction](d);
-			// }
-			else {
-				task[insertFunction](d);
-			}
-		})
+	if (! sibling.length){
+		return;
 	}
+
+	task.detach();
+	$.each(descendants, function(i, d){
+		d.detach();
+	})
+
+	//if moving down, insert task after last sibling descendant
+	var siblingDescendants = getTaskDescendants(sibling);
+	if (insertFunction == "after" && siblingDescendants.length){
+		siblingDescendants[siblingDescendants.length-1][insertFunction](task);
+	}
+	else {
+		sibling[insertFunction](task);
+	}
+
+	$.each(descendants, function(i, d){
+		if (insertFunction == "before"){
+			sibling[insertFunction](d);
+		}
+		// else if (siblingDescendants.length){
+		// 	siblingDescendants[siblingDescendants.length-1][insertFunction](d);
+		// }
+		else {
+			task[insertFunction](d);
+		}
+	})
+
+	updateTaskViewInDB(task.data("task_id"), (up) ? -1 : 1, ! task.closest(".task_column").is("#right"));
 	// }
 	// else {
 	// 	var next = task.next();
@@ -518,12 +522,12 @@ function deleteTaskFromDB(taskID, isToday){
 	});
 }
 
-function updateTaskViewInDB(taskID, delta){
+function updateTaskViewInDB(taskID, delta, isToday){
 	displayStatusMessage("saving...", isToday);
 	$.ajax({
 		url: "/task",
 		type: "POST",
-		data: {id: taskID, view_id_delta: delta},
+		data: {id: taskID, view_index_delta: delta},
 		dataType: "json",
 		success: function (result) {
 			if (result["msg"] == "success"){
