@@ -34,7 +34,7 @@ class TaskResource(Resource):
 		taskID = request.form.get("id")
 		print request.form
 		task = models.Task.query.filter_by(id=taskID).one()
-		for x in ("name", "comment", ("is_today", "is_today"), ("parent", "parent_task_id")):
+		for x in ("name", "comment", ("parent", "parent_task_id")):
 			if type(x) == tuple:
 				attr = x[1]
 				value = request.form.get(x[0])
@@ -51,13 +51,30 @@ class TaskResource(Resource):
 		elif request.form.get("checked") == "false" and task.datetime_completed:
 			task.datetime_completed = None
 
+		db.session.commit()
+
 		if request.form.get("view_index_delta"):
 			try:
-				print "reordering"
 				viewIdDelta = int(request.form.get("view_index_delta"))
-				task.updateView(viewIdDelta)
 			except ValueError:
 				return {"msg": "failed - view_id_delta must be integer"}, 400
+		else:
+			# task.updateView(0, True)
+			viewIdDelta = 0
+
+		column = None
+		if request.form.get("is_today"):
+			value = request.form.get("is_today")
+			column = value = 0 if value == "true" else 1 if value == "false" else value
+			try:
+				value = int(value)
+			except:
+				return {"msg": "failed - is_today must be boolean or integer"}
+			if value not in [0,1]:
+				return {"msg": "failed - is_today must be boolean or integer"}
+
+		print "updating view", column
+		task.updateView(viewIdDelta, column=column, updateDescendants=True)
 
 		db.session.commit()
 

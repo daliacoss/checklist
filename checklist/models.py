@@ -53,7 +53,7 @@ class Task(db.Model):
 	def createView(self):
 
 		parentID = None
-		column = not self.is_today
+		column = 1
 		if self.parent_task_id:
 			tmp = db.session.query(TaskView).filter_by(task_id=self.parent_task_id).one()
 			parentID = tmp.id
@@ -65,15 +65,33 @@ class Task(db.Model):
 			.one()[0] or -1
 		viewIndex += 1
 
-		print column
+		# print column
 		view = TaskView(self.id, viewIndex, parentID, column)
 
 		return view
 
-	def updateView(self, delta):
+	def updateView(self, delta, column=None, updateDescendants=False):
 
 		view = TaskView.query.filter_by(task_id=self.id).one()
-		view.setViewIndex(view.view_index+delta)
+		if delta:
+			view.setViewIndex(view.view_index+delta)
+
+		c = view.task_column
+		if column != None and column != c:
+			#if column has changed and view has no parent, send to the end of the list
+			if not (view.parent_view_id or view.parent_view_id == 0):
+				print "changing"
+				view.view_index = db.session.query(func.max(TaskView.view_index))\
+					.filter(TaskView.parent_view_id==None)\
+					.filter(TaskView.task_column==column)\
+					.one()[0] + 1
+			view.task_column = column
+		print self.name, ":", view.task_column
+
+		if updateDescendants:
+			for child in self.collectChildren():
+				print "child", child.name
+				child.updateView(0, column, True)
 		# if not self.view_id:
 		# 	self.view_id = delta
 		# else:

@@ -66,5 +66,5 @@ def index():
 	taskViewsToTasks(todayTaskViews)
 	taskViewsToTasks(laterTaskViews)
 
-	print [(t.name, t.children) for t in todayTaskViews]
+	# print [(t.name, t.children) for t in todayTaskViews]
 	return render_template('index.html', todayTasks=todayTaskViews, laterTasks=laterTaskViews)
