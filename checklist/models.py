@@ -81,10 +81,10 @@ class Task(db.Model):
 			#if column has changed and view has no parent, send to the end of the list
 			if not (view.parent_view_id or view.parent_view_id == 0):
 				print "changing"
-				view.view_index = db.session.query(func.max(TaskView.view_index))\
+				view.view_index = (db.session.query(func.max(TaskView.view_index))\
 					.filter(TaskView.parent_view_id==None)\
 					.filter(TaskView.task_column==column)\
-					.one()[0] + 1
+					.one()[0] or 0) + 1
 			view.task_column = column
 		print self.name, ":", view.task_column
 
